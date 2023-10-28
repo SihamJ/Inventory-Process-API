@@ -1,0 +1,23 @@
+# Dockerfile récupéré du projet intégrateur. @Matheo pour la crosscompilation.
+
+stages:
+  - build
+  - deploy
+
+# x86 build using Kaniko (no need to be privilegied)
+build_container_x86:
+  stage: build
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [ "" ]
+  variables:
+    IMAGE_TAG: $CI_REGISTRY_IMAGE:x86-$CI_COMMIT_REF_SLUG
+    CACHE_REPO: $CI_REGISTRY_IMAGE/cache
+  script:
+    - mkdir -p /kaniko/.docker
+    # Login to the two image registries
+    - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
+    - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --cache=true --cache-repo=$CACHE_REPO --destination $IMAGE_TAG
+  only:
+    refs:
+      - main

@@ -1,0 +1,23 @@
+@startuml
+actor client as client
+participant auth.php as auth #yellow
+database SGBD as bdd #green
+
+client -> auth: POST{login, password}
+alt failure: bad request format
+auth -[#red]x client: HTTP=400
+end
+
+auth -> bdd: check user privileges
+
+alt success: user exists
+bdd -[#green]> auth: user's level of privileges
+auth -> auth: Generating JWT token {login, privileges}
+auth -[#green]> client: HTTP=200 {JWT token}
+
+else failure: user doesn't exist
+bdd -[#red]> auth: error
+auth -[#red]x client: HTTP=403
+end
+
+@enduml

@@ -1,0 +1,38 @@
+@startuml
+actor client as client
+participant query.php as query #yellow
+database SGBD as bdd #green
+
+client -> query: JSON{request code, JWT, request body}
+
+group Structural check
+	query -> query: verificate JWT token
+
+	alt JWT invalid
+	query -[#red]x client: HTTP=401
+	end
+
+	alt request format is invalid
+	query -[#red]x client: HTTP=400
+	end
+
+	alt user privileges insufficient
+	query -[#red]x client: HTTP=403
+	end
+end
+
+group Handling request
+	query -> query: parsing request body
+
+	alt Invalid request body
+	query -[#red]x client: HTTP=406
+	end
+
+	query -> bdd: Querying SGBD (insert or select)
+	bdd -> query: Sending requested data or confirmation
+	query -> query: Formatting answer to JSON format
+	query -[#green]> client: HTTP=200 Sending JSON(SGBD answer)
+end
+
+
+@enduml
